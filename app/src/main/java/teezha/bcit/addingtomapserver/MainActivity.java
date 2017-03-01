@@ -1,22 +1,5 @@
 package teezha.bcit.addingtomapserver;
 
-/** ==============================================================================
- * File         : some_file.java
- *
- * Current Author: First_Name Last_Name
- *
- * Previous Author: None
- *
- * Contact Info: somebody@somewhere.com
- *
- * Purpose :
- *
- * Dependencies: None
- * Modification Log :
- *    --> Created MMM-DD-YYYY (fl)
- *    --> Updated MMM-DD-YYYY (fl)
- *
- * ============================================================================= */
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
@@ -580,9 +563,6 @@ public class MainActivity extends AppCompatActivity {
                      * ===========================================================
                      */
                     zoomToConnector();
-                    if (source instanceof ArcGISTiledMapServiceLayer) {
-                        getMapView().addLayer(getGraphicsLayer());
-                    }
 
 
                 } // end if layer loaded
