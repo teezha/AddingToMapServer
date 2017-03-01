@@ -133,12 +133,6 @@ public class MainActivity extends AppCompatActivity {
                 // ======================================================
 // send a message to the log
 // ======================================================
-                Log.i("GIST-8010", "Inside single tap");
-                getGraphicsLayer().removeAll();
-                Point pt = getMapView().toMapPoint(x, y);
-
-                Graphic pointGraphic = new Graphic(pt, getPointSymbol());
-                graphicsLayer.addGraphic(pointGraphic);
 
 
                 /**
