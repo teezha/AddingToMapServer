@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AddingToMapServer</string>
+
+    <string name="baseMapServiceURL">http://vm131.athena.bcit.ca:6080/arcgis/rest/services/bcit/bcit_base/MapServer</string>
+    <string name="poiFeatureLayerURL">http://vm131.athena.bcit.ca:6080/arcgis/rest/services/bcit/bcit_poi_only/FeatureServer/0</string>
+    <string name="poiFeatureServiceURL">http://vm131.athena.bcit.ca:6080/arcgis/rest/services/bcit/bcit_poi_only/FeatureServer</string>
+    <string name="poiMapServiceURL">http://vm131.athena.bcit.ca:6080/arcgis/rest/services/bcit/bcit_poi_only/Mapserver</string>
+</resources>
