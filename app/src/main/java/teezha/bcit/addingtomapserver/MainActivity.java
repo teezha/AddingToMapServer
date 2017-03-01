@@ -19,9 +19,16 @@ import com.esri.core.geometry.Point;
 import com.esri.core.map.CallbackListener;
 import com.esri.core.map.Feature;
 import com.esri.core.map.FeatureEditResult;
+import com.esri.core.map.FeatureTemplate;
 import com.esri.core.map.FeatureType;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleMarkerSymbol;
+
+import java.util.Properties;
+
+import javax.xml.transform.Templates;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -100,22 +107,22 @@ public class MainActivity extends AppCompatActivity {
     /**
      * ==============================================================================
      * Method : addSinglePress
-     *
+     * <p>
      * Current Author: You!
-     *
+     * <p>
      * Previous Author: Robert Hewlett
-     *
+     * <p>
      * Contact Info: somebody@somewhere.com
-     *
+     * <p>
      * Purpose : Add a single tap event to the map. Will eventually save a point
-     *           to the graphics layers
-     *
+     * to the graphics layers
+     * <p>
      * Dependencies: Quick Toast
-     *
+     * <p>
      * Modification Log :
      * --> Created MMM-DD-YYYY (fl)
      * --> Updated MMM-DD-YYYY (fl)
-     *
+     * <p>
      * =============================================================================
      */
     private void addSinglePress(MapView map) {
@@ -123,11 +130,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSingleTap(float x, float y) {
                 Graphic gIn, gOut;
-                /**
-                 * ===========================================================
-                 * In the future let the user pick the template
-                 * ===========================================================
-                 */
+                // ======================================================
+// send a message to the log
+// ======================================================
+                Log.i("GIST-8010", "Inside single tap");
+                getGraphicsLayer().removeAll();
+                Point pt = getMapView().toMapPoint(x, y);
+
+                Graphic pointGraphic = new Graphic(pt, getPointSymbol());
+                graphicsLayer.addGraphic(pointGraphic);
 
 
                 /**
@@ -135,13 +146,23 @@ public class MainActivity extends AppCompatActivity {
                  * If there is a red diamond on the screen
                  * ===========================================================
                  */
-                if (getGraphicsLayer().getGraphicIDs().length > 0) {
-                    /**
-                     * ===========================================================
-                     * update the default attributes on the template to the new
-                     * values
-                     * ===========================================================
-                     */
+
+                FeatureTemplate featureTemplate = getPoiFeaturelayer().getTypes()[0].getTemplates()[0];
+
+
+                if (getGraphicsLayer().getGraphicIDs() != null) {
+                    // ======================================================
+                    // update the default attributes on the template to the new
+// values  template getPrototype.put("<column_name>","<value>")
+// the column names in the service are:
+//  user_name
+//  comment
+// ======================================================
+
+
+                    featureTemplate.getPrototype().put("user_name", "Toby Zhang");
+                    featureTemplate.getPrototype().put("comment", "Set Bacon");
+
 
                     /**
                      * ===========================================================
@@ -149,23 +170,28 @@ public class MainActivity extends AppCompatActivity {
                      * ===========================================================
                      */
 
+                gIn=getGraphicsLayer().getGraphic(getGraphicsLayer().getGraphicIDs()[0]);
+
                     /**
                      * ===========================================================
                      * make a new graphic with the updated template and geom
                      * ===========================================================
                      */
 
+                gOut = getPoiFeaturelayer().createFeatureWithTemplate(featureTemplate,gIn.getGeometry());
                     /**
                      * ===========================================================
                      * organize the new graphic (geom + att) in a geometry array
                      * ===========================================================
                      */
 
+                Graphic[] graphicArray = {gOut};
                     /**
                      * ===========================================================
                      * apply the edits; in this case just one insert
                      * ===========================================================
                      */
+                getPoiFeaturelayer().applyEdits(graphicArray,null,null,getEditCallBack());
 
 
                 }
@@ -383,14 +409,14 @@ public class MainActivity extends AppCompatActivity {
     /**
      * =============================================================================
      * setter for the default point symbol
-     *
+     * <p>
      * import android.graphics.Color;
-     *
+     * <p>
      * =============================================================================
      */
     private void setPointSymbol() {
-        pointSymbol = new SimpleMarkerSymbol(Color.RED, 15,
-                SimpleMarkerSymbol.STYLE.DIAMOND);
+        pointSymbol = new SimpleMarkerSymbol(Color.BLUE, 20,
+                SimpleMarkerSymbol.STYLE.SQUARE);
     }
 
     /**
@@ -409,22 +435,22 @@ public class MainActivity extends AppCompatActivity {
     /**
      * ==============================================================================
      * Method : setEditCallBack
-     *
+     * <p>
      * Current Author: You!
-     *
+     * <p>
      * Previous Author: Robert Hewlett
-     *
+     * <p>
      * Contact Info: somebody@somewhere.com
-     *
+     * <p>
      * Purpose : setup a callback listener for when you save edits
-     *
-     *
+     * <p>
+     * <p>
      * Dependencies: Quick Toast and slow toast
-     *
+     * <p>
      * Modification Log :
      * --> Created MMM-DD-YYYY (fl)
      * --> Updated MMM-DD-YYYY (fl)
-     *
+     * <p>
      * =============================================================================
      */
     private void setEditCallBack() {
@@ -452,6 +478,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
+
             @Override
             public void onError(Throwable e) {
                 slowToast(e.getMessage());
@@ -461,32 +488,30 @@ public class MainActivity extends AppCompatActivity {
     } // end of the method
 
 
-
     /**
      * ==============================================================================
      * Method : getEditCallBack
-     *
+     * <p>
      * Current Author: You!
-     *
+     * <p>
      * Previous Author: Robert Hewlett
-     *
+     * <p>
      * Contact Info: somebody@somewhere.com
-     *
+     * <p>
      * Purpose : return the edit call back
-     *
-     *
+     * <p>
+     * <p>
      * Dependencies: Quick Toast and slow toast
-     *
+     * <p>
      * Modification Log :
      * --> Created FEB-18-2016 (rh)
      * --> Updated MMM-DD-YYYY (fl)
-     *
+     * <p>
      * =============================================================================
      */
     private CallbackListener<FeatureEditResult[][]> getEditCallBack() {
 
-        if (editCallBack == null)
-        {
+        if (editCallBack == null) {
             setEditCallBack();
         }
 
@@ -581,6 +606,7 @@ public class MainActivity extends AppCompatActivity {
     private void setgraphicsLayer() {
         graphicsLayer = new GraphicsLayer();
     }
+
     /**
      * =============================================================================
      * getter for the map's graphics layer
@@ -594,27 +620,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     /**
      * ==============================================================================
      * Method : addLongPress
-     *
+     * <p>
      * Current Author: You!
-     *
+     * <p>
      * Previous Author: Robert Hewlett
-     *
+     * <p>
      * Contact Info: somebody@somewhere.com
-     *
+     * <p>
      * Purpose : Add a long press event to the map. Will eventually add a point
      * to
      * To the graphics layers
-     *
+     * <p>
      * Dependencies: Quick Toast
-     *
+     * <p>
      * Modification Log :
      * --> Created MMM-DD-YYYY (fl)
      * --> Updated MMM-DD-YYYY (fl)
-     *
+     * <p>
      * =============================================================================
      */
     private void addLongPress(MapView map) {
@@ -634,7 +659,8 @@ public class MainActivity extends AppCompatActivity {
                 getGraphicsLayer().removeAll();
                 Point pt = getMapView().toMapPoint(x, y);
 
-
+                Graphic pointGraphic = new Graphic(pt, getPointSymbol());
+                graphicsLayer.addGraphic(pointGraphic);
 
 
                 return false;
@@ -667,8 +693,6 @@ public class MainActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(context, message, duration);
         toast.show();
     }
-
-
 
 
 }
