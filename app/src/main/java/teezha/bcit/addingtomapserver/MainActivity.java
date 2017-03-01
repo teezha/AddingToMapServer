@@ -562,8 +562,10 @@ public class MainActivity extends AppCompatActivity {
                      *      setup the call back listener
                      * ===========================================================
                      */
-                    zoomToConnector();
-
+                    if (source instanceof ArcGISTiledMapServiceLayer) {
+                        getMapView().addLayer(getGraphicsLayer());
+                        zoomToConnector();
+                    }
 
                 } // end if layer loaded
             } // end of on status changed
