@@ -11,10 +11,17 @@
     tools:context="teezha.bcit.addingtomapserver.MainActivity">
 
 
+
+    <Spinner
+        android:id="@+id/featureTypeList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <com.esri.android.map.MapView
         android:id="@+id/map"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:layout_below="@id/featureTypeList"
         >
     </com.esri.android.map.MapView>
 

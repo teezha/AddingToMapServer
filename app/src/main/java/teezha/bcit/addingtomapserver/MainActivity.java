@@ -2,13 +2,19 @@ package teezha.bcit.addingtomapserver;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.esri.android.map.GraphicsLayer;
+import com.esri.android.map.Layer;
 import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISFeatureLayer;
 import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
@@ -23,14 +29,20 @@ import com.esri.core.map.FeatureTemplate;
 import com.esri.core.map.FeatureType;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleMarkerSymbol;
+import com.esri.core.symbol.Symbol;
+import com.esri.core.symbol.SymbolHelper;
 
-import java.util.Properties;
-
-import javax.xml.transform.Templates;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    /** ==================================================
+     * Added in module 07: Attribute Dialog
+     * ===================================================
+     */
+    final int ADD_FEAT_CODE = 1;
+    final int DELETE_FEAT_CODE = 2;
+    final int UPDATE_FEAT_CODE = 3;
+    final int REQUEST_OK = 1;
 
     /** ================================================================
      *
@@ -78,6 +90,25 @@ public class MainActivity extends AppCompatActivity {
     SimpleMarkerSymbol pointSymbol;
     CallbackListener<FeatureEditResult[][]> editCallBack;
 
+
+
+    /** ==================================================
+     * Added in module 07: Spinner template picker
+     * ==================================================
+     */
+    ArrayList<FeatureTypeInfo> aList;
+    Spinner spnFeatureTypeList;
+    int activeFeatureType = -1;
+
+    /** =====================================
+     * Private fields for FeatureTypeInfo
+     * =====================================
+     */
+    private int id;
+    private Bitmap bitmap;
+    private String name;
+    private Symbol symbol;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +124,14 @@ public class MainActivity extends AppCompatActivity {
         addSinglePress(mapView);
 
         setEditCallBack();
+
+        /** ==================================================
+         * Added in module 07: Hook the spinner to the UI
+         * Hook the spinner to its listener
+         * ==================================================
+         * */
+        spnFeatureTypeList = (Spinner) findViewById(R.id.featureTypeList);
+        addItemSelectedListener(spnFeatureTypeList);
 
 
     }
@@ -125,74 +164,8 @@ public class MainActivity extends AppCompatActivity {
      * <p>
      * =============================================================================
      */
-    private void addSinglePress(MapView map) {
-        map.setOnSingleTapListener(new OnSingleTapListener() {
-            @Override
-            public void onSingleTap(float x, float y) {
-                Graphic gIn, gOut;
-                // ======================================================
-// send a message to the log
-// ======================================================
 
 
-                /**
-                 * ===========================================================
-                 * If there is a red diamond on the screen
-                 * ===========================================================
-                 */
-
-                FeatureTemplate featureTemplate = getPoiFeaturelayer().getTypes()[0].getTemplates()[0];
-
-
-                if (getGraphicsLayer().getGraphicIDs() != null) {
-                    // ======================================================
-                    // update the default attributes on the template to the new
-// values  template getPrototype.put("<column_name>","<value>")
-// the column names in the service are:
-//  user_name
-//  comment
-// ======================================================
-
-
-                    featureTemplate.getPrototype().put("user_name", "Toby Zhang");
-                    featureTemplate.getPrototype().put("comment", "Set Bacon");
-
-
-                    /**
-                     * ===========================================================
-                     * get the geometry from the graphics layer via the graphic
-                     * ===========================================================
-                     */
-
-                gIn=getGraphicsLayer().getGraphic(getGraphicsLayer().getGraphicIDs()[0]);
-
-                    /**
-                     * ===========================================================
-                     * make a new graphic with the updated template and geom
-                     * ===========================================================
-                     */
-
-                gOut = getPoiFeaturelayer().createFeatureWithTemplate(featureTemplate,gIn.getGeometry());
-                    /**
-                     * ===========================================================
-                     * organize the new graphic (geom + att) in a geometry array
-                     * ===========================================================
-                     */
-
-                Graphic[] graphicArray = {gOut};
-                    /**
-                     * ===========================================================
-                     * apply the edits; in this case just one insert
-                     * ===========================================================
-                     */
-                getPoiFeaturelayer().applyEdits(graphicArray,null,null,getEditCallBack());
-
-
-                }
-            }
-        }); // end of the inner class
-
-    } // Add a single tap listener
 
     /**
      * ==================================================
@@ -203,6 +176,85 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(resultCode==RESULT_OK) {
+
+            /**
+             * ===========================================================
+             * If there is a red diamond on the screen
+             * ===========================================================
+             */
+
+            FeatureTemplate featureTemplate = getPoiFeaturelayer().getTypes()[0].getTemplates()[0];
+
+            Graphic gIn, gOut;
+
+            if (getGraphicsLayer().getGraphicIDs() != null) {
+                // ======================================================
+                // update the default attributes on the template to the new
+// values  template getPrototype.put("<column_name>","<value>")
+// the column names in the service are:
+//  user_name
+//  comment
+// ======================================================
+
+
+
+                featureTemplate.getPrototype().put("user_name", data.getStringExtra("user_name"));
+                featureTemplate.getPrototype().put("comment", data.getStringExtra("user_comment"));
+
+
+                /**
+                 * ===========================================================
+                 * get the geometry from the graphics layer via the graphic
+                 * ===========================================================
+                 */
+
+                gIn=getGraphicsLayer().getGraphic(getGraphicsLayer().getGraphicIDs()[0]);
+
+                /**
+                 * ===========================================================
+                 * make a new graphic with the updated template and geom
+                 * ===========================================================
+                 */
+
+                gOut = getPoiFeaturelayer().createFeatureWithTemplate(featureTemplate,gIn.getGeometry());
+                /**
+                 * ===========================================================
+                 * organize the new graphic (geom + att) in a geometry array
+                 * ===========================================================
+                 */
+
+                Graphic[] graphicArray = {gOut};
+                /**
+                 * ===========================================================
+                 * apply the edits; in this case just one insert
+                 * ===========================================================
+                 */
+                getPoiFeaturelayer().applyEdits(graphicArray,null,null,getEditCallBack());
+
+
+            }
+            Log.d("8010", "The requestcode was " + requestCode);
+            Log.d("8010", "The resultcode was " + resultCode);
+
+            if (requestCode == ADD_FEAT_CODE) {
+                if (resultCode == RESULT_OK) {
+                    quickToast("returned ok from dialog");
+
+
+                }
+                else
+                {
+                    quickToast("User canceled clearing graphics layer");
+                }
+                getGraphicsLayer().removeAll();
+            }
+        }
+        }
 
     /**
      * =============================================================================
@@ -230,6 +282,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return poiMapServiceURL;
     }
+
 
     /**
      * =============================================================================
@@ -399,7 +452,22 @@ public class MainActivity extends AppCompatActivity {
         poiTiledLayer = new ArcGISTiledMapServiceLayer(getBaseMapServiceURL());
     }
 
+    private void addSinglePress(MapView map) {
+        map.setOnSingleTapListener(new OnSingleTapListener() {
+            @Override
+            public void onSingleTap(float x, float y) {
 
+                // ======================================================
+// send a message to the log
+// ======================================================
+
+                Intent intent= new Intent(getActivity(), GetAttributesDialog.class);
+                startActivityForResult(intent, REQUEST_OK);
+
+            }
+        }); // end of the inner class
+
+    } // Add a single tap listener
     /**
      * =============================================================================
      * setter for the default point symbol
@@ -519,6 +587,8 @@ public class MainActivity extends AppCompatActivity {
      * ================================================================== */
 
 
+
+
     /**
      * ==============================================================================
      * Method : postMapInit
@@ -546,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
         map.setOnStatusChangedListener(new OnStatusChangedListener() {
             @Override
             public void onStatusChanged(Object source, STATUS status) {
-                if (STATUS.INITIALIZED == status) {
+                if (OnStatusChangedListener.STATUS.INITIALIZED == status) {
                     /**
                      * ===========================================================
                      * Your code goes here e.g. get the graphics layer
@@ -562,9 +632,16 @@ public class MainActivity extends AppCompatActivity {
                      *      setup the call back listener
                      * ===========================================================
                      */
-                    if (source instanceof ArcGISTiledMapServiceLayer) {
+                                    if (source instanceof ArcGISTiledMapServiceLayer) {
                         getMapView().addLayer(getGraphicsLayer());
                         zoomToConnector();
+                    }
+
+                    if (source instanceof ArcGISFeatureLayer) {
+                        aList = makeFeatureTypeList(getPoiFeaturelayer());
+                        FeatureTypeAdapter featureTypeAdapter = new FeatureTypeAdapter(getActivity(),R.layout.feature_type_info_view, aList);
+                        spnFeatureTypeList.setAdapter(featureTypeAdapter);
+
                     }
 
                 } // end if layer loaded
@@ -592,6 +669,9 @@ public class MainActivity extends AppCompatActivity {
         getMapView().setScale(scale);
 
     }
+
+
+
 
 
     /**
@@ -689,6 +769,88 @@ public class MainActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(context, message, duration);
         toast.show();
     }
+
+    /** ==============================================================================
+     * Method : makeFeatureTypeList
+     *
+     * Current Author: You!
+     *
+     * Previous Author: Robert Hewlett
+     *
+     * Contact Info: somebody@somewhere.com
+     *
+     * Purpose : Populate a list using the data from the service: type name and
+     * id
+     * then the ArcGIS symbol and the symbol converted to an android bitmap
+     *
+     * Dependencies: Quick Toast
+     *
+     * Modification Log :
+     * --> Created MMM-DD-YYYY (fl)
+     * --> Updated MMM-DD-YYYY (fl)
+     *
+     * =============================================================================
+     */
+    public ArrayList<FeatureTypeInfo> makeFeatureTypeList(ArcGISFeatureLayer agsFeatureLayer) {
+        FeatureType[] ftypes = agsFeatureLayer.getTypes();
+        ArrayList<FeatureTypeInfo> aList = new ArrayList<FeatureTypeInfo>();
+
+        FeatureTypeInfo fInfo;
+        Symbol tmpSymbol;
+        Graphic tmpGraphic;
+        /** ===========================================================
+         * For each template/prototype add it to the list
+         * convert its symbol to an Android bitmap
+         * ============================================================
+         */
+        for (int i = 0; i < ftypes.length; i++) {
+            fInfo = new FeatureTypeInfo();
+            fInfo.setId(Integer.parseInt(ftypes[i].getId()));
+            fInfo.setName(ftypes[i].getName());
+            tmpGraphic = agsFeatureLayer.createFeatureWithTemplate(
+                    ftypes[i].getTemplates()[0], null);
+            tmpSymbol = agsFeatureLayer.getRenderer().getSymbol(tmpGraphic);
+            fInfo.setSymbol(tmpSymbol);
+            fInfo.setBitmap(SymbolHelper.getLegendImage(tmpSymbol, 80, 80));
+            aList.add(fInfo);
+        }
+        return aList;
+    }
+
+    /** ==============================================================================
+     * Method : addItemSelectedListener
+     *
+     * Current Author: You!
+     *
+     * Previous Author: Robert Hewlett
+     *
+     * Contact Info: somebody@somewhere.com
+     *
+     * Purpose : Update the class field activeFeatureType to the current position
+     *
+     * Dependencies: Quick Toast
+     *
+     * Modification Log :
+     * --> Created MMM-DD-YYYY (fl)
+     * --> Updated MMM-DD-YYYY (fl)
+     *
+     * =============================================================================
+     */
+    public void addItemSelectedListener(Spinner spin) {
+        spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                activeFeatureType = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+    } // end of the method
 
 
 }
